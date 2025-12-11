@@ -1,6 +1,5 @@
 // src/client_thread_send.rs
 use vsock::{VsockStream, VsockAddr};
-use core::str;
 use std::io::{Read, Write};
 use std::fs;
 use std::thread;

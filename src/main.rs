@@ -70,7 +70,7 @@ fn main() {
 
         "--dump" => {
             let handle = thread::spawn(move || {
-                client_thread_dump::client_thread(json_file_path, server_cid, server_port).unwrap();
+                client_thread_dump::client_thread(json_file_path, server_cid, server_port);
             });
             handles.push(handle);
             // 错开启动时间
