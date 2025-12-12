@@ -4,18 +4,14 @@ use std::time::Duration;
  
 mod client_thread_save;
 mod client_thread_dump;
+mod utils;
+mod constants;
 
-const DEFAULT_SERVER_CID: u32 = 103;  // 默认连接 Host (CID=2)
+const DEFAULT_SERVER_CID: u32 = 3;  // 默认连接 Host (CID=3)
 const DEFAULT_SERVER_PORT: u32 = 1234;
- 
- 
 
 
 fn main() {
-    //read args from command line as server cid, port, num connections, messages per connection
-    // If args are not provided, use default values
-
-
     // 假设使用客户端的命令格式是  .target/debug/vsock_client -f path/to/file.json 103 1234
     let args: Vec<String> = env::args().collect();
 
@@ -26,7 +22,6 @@ fn main() {
         eprintln!("使用格式： <program> --dump <json_file_path> [server_cid] [server_port]");
         return;
     }
-
 
     let command: String = args[1].clone();                      // 命令
     let json_file_path: String = args[2].clone();               // 读取 或者 存储 的 JSON 文件路径
@@ -40,8 +35,6 @@ fn main() {
     } else {
         DEFAULT_SERVER_PORT
     };
-
-
  
     println!("╔════════════════════════════════════╗");
     println!("║    VSocket Test Client v1.0        ║");
@@ -56,7 +49,7 @@ fn main() {
 
     // 启动客户端线程来处理 vsock 连接
     let mut handles = Vec::new();
-    println!("[Main] Spawning a thread for vsock...");
+    println!("[Main] 正在启动 vsock 线程...");
 
     match command.as_str() {
         "--save" => {
@@ -81,15 +74,15 @@ fn main() {
         }
     } 
 
-    println!("\n[Main] All threads spawned. Waiting for completion...\n");
+    println!("\n[Main] vsock线程已启动，等待完成...\n");
 
     // 等待所有线程完成
     for (i, handle) in handles.into_iter().enumerate() {
         match handle.join() {
-            Ok(_) => println!("[Main] Thread-{} completed", i),
-            Err(e) => eprintln!("[Main] Thread-{} panicked: {:?}", i, e),
+            Ok(_) => println!("[Main] 线程-{} 已完成", i),
+            Err(e) => eprintln!("[Main] 线程-{} 异常退出: {:?}", i, e),
         }
     }
-    println!("\n[Main] ✓ All threads finished.");
-    println!("[Main] Client exiting.");
+    println!("\n[Main] ✓ 所有线程已结束。");
+    println!("[Main] 客户端退出。");
 }

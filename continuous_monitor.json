@@ -1,0 +1,14 @@
+  {
+  "hostname": "kylin-pc",
+  "ip_address": "10.88.21.37",
+  "timestamp": "2025-12-12T14:17:14+08:00",
+  "system_metrics": {
+    "cpu_info": "%Cpu(s): 45.3 us,  3.6 sy,  0.0 ni, 51.1 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st",
+    "memory_info": "MiB Mem :  27710.7 total,   4281.6 free,  12722.3 used,  10706.8 buff/cache",
+    "swap_info": "MiB Swap:  33393.0 total,  33393.0 free,      0.0 used.  14387.7 avail Mem ",
+    "threadinfo": "xxx"
+  },
+  "logs": {
+    "dmesg": "xxxxx xxxx"
+  }
+ }
