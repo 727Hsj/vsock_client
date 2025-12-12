@@ -78,7 +78,7 @@ pub fn client_thread(json_file_path: String, server_cid: u32, server_port: u32) 
                         Ok(val) => {
                             received_items.push(val);
                             // 发送确认标识 "OK"
-                            if let Err(e) = stream.write_all(b"OK\n") {
+                            if let Err(e) = stream.write_all(b"ok and success\n") {
                                 eprintln!("[Client-Thread-For-Dump] ✗ Failed to send ACK: {:?}", e);
                                 break;
                             }
@@ -86,7 +86,10 @@ pub fn client_thread(json_file_path: String, server_cid: u32, server_port: u32) 
                         Err(e) => {
                              eprintln!("[Client-Thread-For-Dump] ✗ Failed to parse JSON: {:?}.", e);
                              // 即使解析失败也发送 OK 以继续
-                             stream.write_all(b"OK\n").ok();
+                            if let Err(e) = stream.write_all(b"ok but fail\n") {
+                                eprintln!("[Client-Thread-For-Dump] ✗ Failed to send ACK: {:?}", e);
+                                break;
+                            }
                         }
                     }
                 }
