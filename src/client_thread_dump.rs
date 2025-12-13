@@ -25,8 +25,8 @@ pub fn client_thread(json_file_path: String, server_cid: u32, server_port: u32) 
     };
 
     // 发送 send
-    let message = "dump command\n";
-    match stream.write_all(message.as_bytes()) {
+    let message = b"dump command\n";
+    match stream.write_all(message) {
         Ok(_) => {
             println!("[Client-Thread-For-Dump] → 已发送命令");
         }
@@ -51,7 +51,6 @@ pub fn client_thread(json_file_path: String, server_cid: u32, server_port: u32) 
      * 无消息:
      * 服务端，发送 "nofind" 标识，关闭；客户端收到 "nofind" 后，关闭连接。
      */
-
     fs::write(&json_file_path, "").unwrap();    // 先清空文件内容
     let mut buffer = vec![0u8; 4096];
     let mut received_items: Vec<serde_json::Value> = Vec::new();
@@ -70,12 +69,12 @@ pub fn client_thread(json_file_path: String, server_cid: u32, server_port: u32) 
                 }).trim();
 
                 if recv_str == constants::NO_FIND_DUMP_RESPONSE {
-                    return;
+                    break;
                 } else if recv_str == constants::FIND_DUMP_RESPONSE {
                     break;
                 } else if recv_str == "" {
                     continue;
-                }else {
+                } else {
                     // 尝试解析为 JSON
                     match serde_json::from_str::<serde_json::Value>(recv_str) {
                         Ok(val) => {
@@ -103,6 +102,8 @@ pub fn client_thread(json_file_path: String, server_cid: u32, server_port: u32) 
         let pretty_json = serde_json::to_string_pretty(&received_items).unwrap();
         fs::write(&json_file_path, pretty_json).unwrap();
         println!("[Client-Thread-For-Dump] 已保存 {} 条记录到 {}", received_items.len(), json_file_path);
+    } else {
+        println!("[Client-Thread-For-Dump] 暂无需要接收的 dump 信息");
     }
 
     // 间隔

@@ -1,6 +1,5 @@
 // src/utils.rs
 use vsock::VsockStream;
-use std::f32::consts::E;
 use std::io::{Read, Write};
 use std::thread;
 use std::time::Duration;
