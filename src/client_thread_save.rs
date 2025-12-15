@@ -1,91 +1,60 @@
-// src/client_thread_send.rs
+// src/client_thread_save.rs
 use vsock::{VsockStream, VsockAddr};
-use std::io::{Read, Write};
-use std::fs;
-use std::thread;
-use std::time::Duration;
 use crate::utils;
+use crate::protocol::MessagePacket;
+use crate::protocol::utils as protocol_utils;
+use anyhow::Result;
+use crate::constants;
 
-const MESSAGE_INTERVAL_MS: u64 = 100;
 
-pub fn client_thread(json_file_path: String, server_cid: u32, server_port: u32) {
-    println!("[Client-Thread-For-Save] 黑匣子存储正在启动...");
+pub fn client_thread(client_id: usize, msg_packets: Vec<MessagePacket>, server_cid: u32, server_port: u32) -> Result<()> {
+    println!("[Client-{}] 黑匣子客户端线程正在启动...", client_id);
  
     // 连接到服务器
     let addr = VsockAddr::new(server_cid, server_port);
     let mut stream = match VsockStream::connect(&addr) {
         Ok(s) => {
-            println!("[Client-Thread-For-Save] ✓ 已连接到服务端 CID:{} Port:{}", server_cid, server_port);
+            println!("[Client-{}] ✓ 已连接到服务端 CID:{} Port:{}", client_id, server_cid, server_port);
             s
         }
         Err(e) => {
-            eprintln!("[Client-Thread-For-Save] ✗ 连接失败: {:?}", e);
-            return;
+            return Err(anyhow::anyhow!("[Client-{}] ✗ 连接失败: {:?}", client_id, e));
         }
     };
 
-    // 读取 JSON 文件
-    let file_content = match fs::read_to_string(&json_file_path) {
-        Ok(content) => content,
-        Err(e) => {
-            eprintln!("[Client-Thread-For-Save] ✗ 读取文件失败 {}: {:?}", json_file_path, e);
-            return;
-        }
-    };
+    println!("[Client-{}] 准备发送数据，负责 {} 个消息包", client_id, msg_packets.len());
 
-    // 解析 JSON 并序列化为紧凑字符串
-    let json_value: serde_json::Value = match serde_json::from_str(&file_content) {
-        Ok(v) => v,
-        Err(e) => {
-            eprintln!("[Client-Thread-For-Save] ✗ 解析文件 JSON 失败 {}: {:?}", json_file_path, e);
-            return;
-        }
-    };
+    // 1. 发送开始消息, 同时携带 client_id 作为 message_id， 命令编号 作为 reserved
+    protocol_utils::send_start_message(&mut stream, client_id as u32, constants::SAVE_COMMAND)?;
 
-    let mut message = match serde_json::to_string(&json_value) {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("[Client-Thread-For-Save] ✗ 序列化 JSON 失败: {:?}", e);
-            return;
-        }
-    };
-    message.push('\n');
-
-    // 发送 send
-    match stream.write_all(message.as_bytes()) {
-        Ok(_) => {
-            println!("[Client-Thread-For-Save] → 已发送 JSON 内容，来自: {}", json_file_path);
-        }
-        Err(e) => {
-            eprintln!("[Client-Thread-For-Save] ✗ 发送错误: {:?}", e);
-            return;
-        }
+    // 2. 等待ACK
+    if !protocol_utils::wait_for_ack(&mut stream, client_id as u32) {
+        return Err(anyhow::anyhow!("Server not ready"));
     }
 
-    // 接收 echo
-    let mut buffer = vec![0u8; 1024];
-    match stream.read(&mut buffer) {
-        Ok(0) => {
-            eprintln!("[Client-Thread-For-Save] ✗ 服务器意外断开连接");
-        }
-        Ok(n) => {
-            if let Ok(echo) = std::str::from_utf8(&buffer[..n]) {
-                println!("[Client-Thread-For-Save] ← 已接收内容: {}", echo);
-            } else {
-                eprintln!("[Client-Thread-For-Save] ✗ 接收内容 UTF-8 解码失败, Echo bytes: {:?}", n);
-                
+    // 3. 分片发送数据
+    for (index, datamsg) in msg_packets.iter().enumerate() {
+        protocol_utils::send_data_message(&mut stream, datamsg)?;
+
+        // 每发送5个分片等待一次ACK，确保可靠性
+        if index % 5 == 4 {
+            if !protocol_utils::wait_for_ack(&mut stream, client_id as u32) {
+                return Err(anyhow::anyhow!("Transmission interrupted"));
             }
         }
-        Err(e) => {
-            eprintln!("[Client-Thread-For-Save] ✗ 接收错误: {:?}", e);
-        }
     }
 
-    // 间隔
-    thread::sleep(Duration::from_millis(MESSAGE_INTERVAL_MS));
+    // 4. 发送结束消息
+    protocol_utils::send_end_message(&mut stream, client_id as u32)?;
 
-    // 优雅关闭连接
-    utils::graceful_shutdown(&mut stream, "[Client-Thread-For-Save]");
+    // 5. 等待ACK
+    if !protocol_utils::wait_for_ack(&mut stream, client_id as u32) {
+        return Err(anyhow::anyhow!("Server not ready"));
+    }
+    println!("[Client-{}] ✓ 传输完成，服务器已确认", client_id);
 
-    println!("[Client-Thread-For-Save] 完成。正在关闭连接。");
+    // 6. 优雅关闭连接
+    utils::graceful_shutdown(&mut stream, "[Client-{}]");
+
+    Ok(())
 }
