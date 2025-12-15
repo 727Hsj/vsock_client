@@ -80,14 +80,14 @@ fn main() -> Result<(), Box<dyn Error>>{
                 println!("共{}个消息包，线程{}传输第{}-{}个数据包", msg_packets.len(), i+1, start, end);
                 // 并发传输修改 message_id
                 let mut my_chunk = msg_packets[start..end].to_vec();
-                let message_id = i as u32; // 简单生成一个唯一ID
+                let message_id = i as u32 + 1; // 简单生成一个唯一ID
                 for packet in &mut my_chunk {
                     packet.header.set_message_id(message_id);
                 }
 
                 let handle = thread::spawn(move || {
-                    client_thread_save::client_thread(i, my_chunk, server_cid, server_port).unwrap_or_else(|e| {
-                        eprintln!("Save 线程 {} 出现错误: {:?}", i, e);
+                    client_thread_save::client_thread(message_id as usize, my_chunk, server_cid, server_port).unwrap_or_else(|e| {
+                        eprintln!("Save 线程 {} 出现错误: {:?}", message_id, e);
                     });
                 });
                 handles.push(handle);
@@ -97,7 +97,7 @@ fn main() -> Result<(), Box<dyn Error>>{
 
         "--dump" => {
             let handle = thread::spawn(move || {
-                client_thread_dump::client_thread(0, &json_file_path, server_cid, server_port).unwrap_or_else(|e| {
+                client_thread_dump::client_thread(1, &json_file_path, server_cid, server_port).unwrap_or_else(|e| {
                     eprintln!("Dump 线程 出现错误: {:?}", e);
                 });
             });

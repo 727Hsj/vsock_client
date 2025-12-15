@@ -1,7 +1,7 @@
 #[allow(dead_code)]
-pub const MAX_MESSAGE_PACKET_SIZE: usize = 4096;
+pub const MAX_MESSAGE_PACKET_SIZE: usize = 1024;
 pub const MESSAGE_HEADER_SIZE: usize = 20;
-pub const MAX_MESSAGE_BODY_SIZE: usize = 4076;
+pub const MAX_MESSAGE_BODY_SIZE: usize = 1004;
 
 pub const PROTOCOL_VERSION: u8 = 1;
 

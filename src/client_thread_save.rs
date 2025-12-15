@@ -5,6 +5,7 @@ use crate::protocol::MessagePacket;
 use crate::protocol::utils as protocol_utils;
 use anyhow::Result;
 use crate::constants;
+use std::time::Duration;
 
 
 pub fn client_thread(client_id: usize, msg_packets: Vec<MessagePacket>, server_cid: u32, server_port: u32) -> Result<()> {
@@ -34,10 +35,19 @@ pub fn client_thread(client_id: usize, msg_packets: Vec<MessagePacket>, server_c
 
     // 3. 分片发送数据
     for (index, datamsg) in msg_packets.iter().enumerate() {
+        println!("[Client-{}] 发送第 {} 数据包 ", client_id, index);
         protocol_utils::send_data_message(&mut stream, datamsg)?;
+        
+        // // 模拟网络延迟
+        // let xxx = std::time::Instant::now();
+        // while xxx.elapsed() < Duration::from_secs(3) {
+        //     // 忙等待，占用 CPU
+        //     std::hint::spin_loop(); // 提示 CPU 这是一个自旋循环
+        // }
 
         // 每发送5个分片等待一次ACK，确保可靠性
-        if index % 5 == 4 {
+        // if index % 5 == 4 {
+        if 3 % 3 == 0 {
             if !protocol_utils::wait_for_ack(&mut stream, client_id as u32) {
                 return Err(anyhow::anyhow!("Transmission interrupted"));
             }

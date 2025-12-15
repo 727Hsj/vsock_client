@@ -57,6 +57,14 @@ pub fn client_thread(client_id: usize, json_file_path: &str, server_cid: u32, se
 
     loop {
         let (new_packets, all_end_received) = get_one_report(&mut stream, client_id)?;
+        // 没有记录需要dump
+        if new_packets.len() == 0 && all_end_received == true{
+            println!("[Client-{}] 没有需要 dump 的记录", client_id);
+            protocol_utils::send_ack_message(&mut stream, client_id as u32)?;
+            protocol_utils::wait_for_ack(&mut stream, client_id as u32);
+            break;
+        }
+
         println!("[Client-{}] 成功接收 {} 个数据包", client_id, new_packets.len());
 
         // 将数据包的 body 合并成一个 Vec<u8>
@@ -76,9 +84,8 @@ pub fn client_thread(client_id: usize, json_file_path: &str, server_cid: u32, se
         }
         if all_end_received {
             println!("[Client-{}] 收到 ALL_END 消息，所有传输结束", client_id);
-            protocol_utils::send_end_message(&mut stream, client_id as u32)?;
-            protocol_utils::wait_for_ack(&mut stream, client_id as u32);
             protocol_utils::send_ack_message(&mut stream, client_id as u32)?;
+            protocol_utils::wait_for_ack(&mut stream, client_id as u32);
             break;
         }
     }

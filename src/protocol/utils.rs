@@ -43,8 +43,9 @@ pub fn send_ack_message(stream: &mut VsockStream, msg_id: u32) -> Result<()> {
 
 pub fn send_data_message(stream: &mut VsockStream, datamsg: &MessagePacket) -> Result<()> {    
     // 写入消息头和数据
-    stream.write_all(&datamsg.to_bytes())?;
-    stream.flush()?;
+    let buf = datamsg.to_bytes();
+    println!("hsj:: the size of packet {}, and body {}", buf.len(), datamsg.body.len());
+    stream.write_all(&buf)?;
     Ok(())
 }
 
@@ -61,6 +62,10 @@ pub fn wait_for_ack(stream: &mut VsockStream, expected_msg_id: u32) -> bool {
     match stream.read_exact(&mut packet_buf) {
         Ok(_) => {
             let packet = MessagePacket::from_bytes(&packet_buf);
+            println!("hsj:: packet.header.msg_type {}", packet.header.msg_type);
+            println!("hsj:: MSG_TYPE_ACK {}", MSG_TYPE_ACK);
+            println!("hsj:: packet.header.message_id {}", packet.header.message_id);
+            println!("hsj:: expected_msg_id {}", expected_msg_id);
             if packet.header.msg_type == MSG_TYPE_ACK && packet.header.message_id == expected_msg_id {
                 true
             } else {
