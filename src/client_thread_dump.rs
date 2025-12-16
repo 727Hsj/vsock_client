@@ -12,7 +12,7 @@ const MESSAGE_INTERVAL_MS: u64 = 100;
 
 pub fn client_thread(server_cid: u32, server_port: u32, command: u8) -> Result<Vec<u8>> {
     let client_id = 1; // 简单起见，使用固定的 client_id
-    println!("[Client-{}] 黑匣子客户端线程正在启动...", client_id);
+    println!("[Client-{}] 黑匣子客户端正在启动...", client_id);
  
     // 连接到服务器
     let addr = VsockAddr::new(server_cid, server_port);
@@ -104,7 +104,7 @@ pub fn client_thread(server_cid: u32, server_port: u32, command: u8) -> Result<V
     // 优雅关闭连接
     utils::graceful_shutdown(&mut stream, "[Client-Thread-For-Dump]");
 
-    println!("[Client-Thread-For-Dump] 完成。正在关闭连接。");
+    println!("[Client-For-Dump] 完成。正在关闭连接。");
 
     Ok(json_bytes)
 }

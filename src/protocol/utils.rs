@@ -12,7 +12,7 @@ pub fn send_start_message(stream: &mut VsockStream, msg_id: u32, command: u8) ->
     let mut startmsg = MessagePacket::new(MSG_TYPE_START, 0, 0, 0);
     startmsg.header.set_message_id(msg_id);
     startmsg.header.set_reserved(command);  // 在待定字段设置命令编号
-    println!("发送开始消息，长度是 20 吗？ ? {}", startmsg.get_len() == startmsg.to_bytes().len());
+    // println!("发送开始消息，长度是 20 吗？ ? {}", startmsg.get_len() == startmsg.to_bytes().len());
 
     stream.write_all(&startmsg.to_bytes())?;
     stream.flush()?;
@@ -22,7 +22,7 @@ pub fn send_start_message(stream: &mut VsockStream, msg_id: u32, command: u8) ->
 pub fn send_end_message(stream: &mut VsockStream, msg_id: u32) -> Result<()> {
     let mut endmsg = MessagePacket::new(MSG_TYPE_END, 0, 0, 0);
     endmsg.header.set_message_id(msg_id);
-    println!("发送结束消息，长度是 20 吗？ ? {}", endmsg.get_len() == endmsg.to_bytes().len());
+    // println!("发送结束消息，长度是 20 吗？ ? {}", endmsg.get_len() == endmsg.to_bytes().len());
 
     stream.write_all(&endmsg.to_bytes())?;
     stream.flush()?;
@@ -33,7 +33,7 @@ pub fn send_end_message(stream: &mut VsockStream, msg_id: u32) -> Result<()> {
 pub fn send_ack_message(stream: &mut VsockStream, msg_id: u32) -> Result<()> {
     let mut ackmsg = MessagePacket::new(MSG_TYPE_ACK, 0, 0, 0);
     ackmsg.header.set_message_id(msg_id);
-    println!("发送ACK消息，长度是 20 吗？ ? {}", ackmsg.get_len() == ackmsg.to_bytes().len());
+    // println!("发送ACK消息，长度是 20 吗？ ? {}", ackmsg.get_len() == ackmsg.to_bytes().len());
 
     stream.write_all(&ackmsg.to_bytes())?;
     stream.flush()?;
@@ -44,7 +44,6 @@ pub fn send_ack_message(stream: &mut VsockStream, msg_id: u32) -> Result<()> {
 pub fn send_data_message(stream: &mut VsockStream, datamsg: &MessagePacket) -> Result<()> {    
     // 写入消息头和数据
     let buf = datamsg.to_bytes();
-    println!("hsj:: the size of packet {}, and body {}", buf.len(), datamsg.body.len());
     stream.write_all(&buf)?;
     Ok(())
 }
@@ -52,7 +51,6 @@ pub fn send_data_message(stream: &mut VsockStream, datamsg: &MessagePacket) -> R
 #[allow(dead_code)]
 pub fn receive_data_message(stream: &mut VsockStream, buf: &mut [u8]) -> Result<MessagePacket> {
     let n = stream.read(buf)?;
-    println!("hsj:: receive_data_message read n bytes: {}", n);
     let packet = MessagePacket::from_bytes(&buf[..n]);
     Ok(packet)
 }
@@ -63,10 +61,6 @@ pub fn wait_for_ack(stream: &mut VsockStream, expected_msg_id: u32) -> bool {
     match stream.read_exact(&mut packet_buf) {
         Ok(_) => {
             let packet = MessagePacket::from_bytes(&packet_buf);
-            println!("hsj:: packet.header.msg_type {}", packet.header.msg_type);
-            println!("hsj:: MSG_TYPE_ACK {}", MSG_TYPE_ACK);
-            println!("hsj:: packet.header.message_id {}", packet.header.message_id);
-            println!("hsj:: expected_msg_id {}", expected_msg_id);
             if packet.header.msg_type == MSG_TYPE_ACK && packet.header.message_id == expected_msg_id {
                 true
             } else {

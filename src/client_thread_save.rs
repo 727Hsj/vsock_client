@@ -8,7 +8,7 @@ use anyhow::Result;
 
 pub fn client_thread(msg_packets: Vec<MessagePacket>, server_cid: u32, server_port: u32, command: u8) -> Result<()> {
     let msg_id = 1; // 简单起见，使用固定的 msg_id
-    println!("[Client-{}] 黑匣子客户端线程正在启动...", msg_id);
+    println!("[Client-{}] 黑匣子客户端正在启动...", msg_id);
  
     // 连接到服务器
     let addr = VsockAddr::new(server_cid, server_port);
@@ -53,6 +53,8 @@ pub fn client_thread(msg_packets: Vec<MessagePacket>, server_cid: u32, server_po
 
     // 6. 优雅关闭连接
     utils::graceful_shutdown(&mut stream, "[Client-{}]");
+
+    println!("[Client-For-Save] 完成。正在关闭连接。");
 
     Ok(())
 }
