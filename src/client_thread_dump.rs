@@ -1,10 +1,8 @@
 // src/client_thread_dump.rs
 use vsock::{VsockStream, VsockAddr};
-use std::process::Command;
 use std::thread;
 use std::time::Duration;
-use std::fs;
-use crate::{constants, utils};
+use crate::utils;
 use crate::protocol::{MessagePacket, utils as protocol_utils};
 use anyhow::Result;
 use crate::protocol::consts;

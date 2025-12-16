@@ -4,8 +4,6 @@ use crate::utils;
 use crate::protocol::MessagePacket;
 use crate::protocol::utils as protocol_utils;
 use anyhow::Result;
-use crate::constants;
-use std::time::Duration;
 
 
 pub fn client_thread(msg_packets: Vec<MessagePacket>, server_cid: u32, server_port: u32, command: u8) -> Result<()> {

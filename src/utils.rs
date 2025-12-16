@@ -1,12 +1,6 @@
 // src/utils.rs
 use vsock::VsockStream;
-use std::io::{Read, Write};
-use std::thread;
-use std::time::Duration;
 use crate::constants;
-
-const MAX_BUFFER_SIZE: usize = 64;
-const MAX_RETRIES: usize = 3;
 
 // 发送 shutdown 请求
 pub fn graceful_shutdown(stream: &mut VsockStream, log_prefix: &str) {
