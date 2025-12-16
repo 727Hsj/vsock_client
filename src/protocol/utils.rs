@@ -52,6 +52,7 @@ pub fn send_data_message(stream: &mut VsockStream, datamsg: &MessagePacket) -> R
 #[allow(dead_code)]
 pub fn receive_data_message(stream: &mut VsockStream, buf: &mut [u8]) -> Result<MessagePacket> {
     let n = stream.read(buf)?;
+    println!("hsj:: receive_data_message read n bytes: {}", n);
     let packet = MessagePacket::from_bytes(&buf[..n]);
     Ok(packet)
 }

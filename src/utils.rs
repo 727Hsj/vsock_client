@@ -15,3 +15,13 @@ pub fn graceful_shutdown(stream: &mut VsockStream, log_prefix: &str) {
         eprintln!("{} ✗ 关闭连接失败: {:?}", log_prefix, e);
     }
 }
+
+pub fn get_command_code(command: &str) -> u8 {
+    match command {
+        constants::SAVE => constants::SAVE_COMMAND,
+        constants::DUMP => constants::DUMP_COMMAND,
+        constants::SAVE_PROCESS => constants::SAVE_PROCESS_COMMAND,
+        constants::DUMP_PROCESS => constants::DUMP_PROCESS_COMMAND,
+        _ => 0,
+    }
+}

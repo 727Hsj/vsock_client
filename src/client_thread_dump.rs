@@ -1,5 +1,6 @@
 // src/client_thread_dump.rs
 use vsock::{VsockStream, VsockAddr};
+use std::process::Command;
 use std::thread;
 use std::time::Duration;
 use std::fs;
@@ -11,7 +12,8 @@ use crate::data_process;
 
 const MESSAGE_INTERVAL_MS: u64 = 100;
 
-pub fn client_thread(client_id: usize, json_file_path: &str, server_cid: u32, server_port: u32) -> Result<()> {
+pub fn client_thread(server_cid: u32, server_port: u32, command: u8) -> Result<Vec<u8>> {
+    let client_id = 1; // 简单起见，使用固定的 client_id
     println!("[Client-{}] 黑匣子客户端线程正在启动...", client_id);
  
     // 连接到服务器
@@ -27,7 +29,7 @@ pub fn client_thread(client_id: usize, json_file_path: &str, server_cid: u32, se
     };
 
     // 1. 发送开始消息, 同时携带 client_id 作为 message_id， 命令编号 作为 reserved
-    protocol_utils::send_start_message(&mut stream, client_id as u32, constants::DUMP_COMMAND)?;
+    protocol_utils::send_start_message(&mut stream, client_id as u32, command)?;
 
     // 2. 等待 ACK
     if !protocol_utils::wait_for_ack(&mut stream, client_id as u32) {
@@ -52,7 +54,7 @@ pub fn client_thread(client_id: usize, json_file_path: &str, server_cid: u32, se
      * 无消息:
      * 服务端，发送 "nofind" 标识，关闭；客户端收到 "nofind" 后，关闭连接。
      */
-    fs::write(&json_file_path, "").unwrap();    // 先清空文件内容
+
     let mut received_items: Vec<serde_json::Value> = Vec::new();
 
     loop {
@@ -90,11 +92,10 @@ pub fn client_thread(client_id: usize, json_file_path: &str, server_cid: u32, se
         }
     }
 
-    // 将所有接收到的条目写入文件
+    let mut json_bytes: Vec<u8> = Vec::new();
     if !received_items.is_empty() {
-        let pretty_json = serde_json::to_string_pretty(&received_items).unwrap();
-        fs::write(&json_file_path, pretty_json).unwrap();
-        println!("[Client-{}] 已保存 {} 条记录到 {}", client_id, received_items.len(), json_file_path);
+        // 导出为 Vec<u8>
+        json_bytes = serde_json::to_vec(&received_items)?;
     } else {
         println!("[Client-{}] 暂无需要接收的 dump 信息", client_id);
     }
@@ -107,7 +108,7 @@ pub fn client_thread(client_id: usize, json_file_path: &str, server_cid: u32, se
 
     println!("[Client-Thread-For-Dump] 完成。正在关闭连接。");
 
-    Ok(())
+    Ok(json_bytes)
 }
 
 
