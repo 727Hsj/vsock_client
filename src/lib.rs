@@ -5,10 +5,12 @@ pub mod constants;
 pub mod protocol;
 pub mod data_process;
 
-use std::thread;
-use std::time::Duration;
+use std::sync::Mutex;
 use anyhow::Result;
 use crate::protocol::MessagePacket;
+
+// 全局互斥锁，用于保护 Vsock 通信不被并发竞争
+static VSOCK_MUTEX: Mutex<()> = Mutex::new(());
 
 pub const DEFAULT_SERVER_CID: u32 = 3;  // 默认连接 Host (CID=3)
 pub const DEFAULT_SERVER_PORT: u32 = 1234;
@@ -26,19 +28,20 @@ pub fn send_process(message_str: String) -> Result<()> {
             packet.header.set_message_id(1);
     }
 
-    client_thread_save::client_thread(msg_packets, DEFAULT_SERVER_CID, DEFAULT_SERVER_PORT, constants::SAVE_PROCESS_COMMAND).unwrap_or_else(|e| {
-            eprintln!("Save 线程 出现错误: {:?}", e);
-    });
+    // 获取锁，保护通信过程
+    {
+        let _guard = VSOCK_MUTEX.lock().map_err(|e| anyhow::anyhow!("获取锁失败: {:?}", e))?;
+        client_thread_save::client_thread(msg_packets, DEFAULT_SERVER_CID, DEFAULT_SERVER_PORT, constants::SAVE_PROCESS_COMMAND).unwrap_or_else(|e| {
+                eprintln!("Save 线程 出现错误: {:?}", e);
+        });
+    }
    
     Ok(())
 }
 
 pub fn dump_process() -> Result<Vec<u8>> {
+    // 获取锁，保护通信过程
+    let _guard = VSOCK_MUTEX.lock().map_err(|e| anyhow::anyhow!("获取锁失败: {:?}", e))?;
 
-    let ret = client_thread_dump::client_thread(DEFAULT_SERVER_CID, DEFAULT_SERVER_PORT, constants::DUMP_PROCESS_COMMAND);
-
-    // 错开启动时间
-    thread::sleep(Duration::from_millis(300));
-
-    ret
+    client_thread_dump::client_thread(DEFAULT_SERVER_CID, DEFAULT_SERVER_PORT, constants::DUMP_PROCESS_COMMAND)
 }
