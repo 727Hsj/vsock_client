@@ -2,10 +2,9 @@
 use std::convert::TryInto;
 use super::consts::*;
 
-
-
 #[derive(Debug, Clone)]
 /// 协议头结构体
+#[repr(C)]
 pub struct MessageHeader {
     // 协议版本 (1字节)
     pub version: u8,

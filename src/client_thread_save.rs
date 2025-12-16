@@ -38,6 +38,7 @@ pub fn client_thread(msg_packets: Vec<MessagePacket>, server_cid: u32, server_po
         protocol_utils::send_data_message(&mut stream, datamsg)?;
     
         if !protocol_utils::wait_for_ack(&mut stream, msg_id as u32) {
+            utils::graceful_shutdown(&mut stream, "[Client-{}]");
             return Err(anyhow::anyhow!("Transmission interrupted"));
         }
     }
