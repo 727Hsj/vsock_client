@@ -151,7 +151,7 @@ fn get_one_report(stream: &mut VsockStream, client_id: usize) -> Result<(Vec<Mes
         if packet.header.message_id != client_id as u32 {
             return Err(anyhow::anyhow!("Unexpected message ID: {}, expected: {}", packet.header.message_id, client_id));
         }
-        println!("收到分片: ID={}, Index={}/{}", packet.header.message_id, packet.header.chunk_index, packet.header.chunk_count);
+        // println!("收到分片: ID={}, Index={}/{}", packet.header.message_id, packet.header.chunk_index, packet.header.chunk_count);
 
         // 4. 统计消息体累计大小
         received_data_size += packet.body.len() as u32;
