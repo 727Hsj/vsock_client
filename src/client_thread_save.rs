@@ -33,7 +33,7 @@ pub fn client_thread(msg_packets: Vec<MessagePacket>, server_cid: u32, server_po
     }
 
     // 3. 分片发送数据
-    for (index, datamsg) in msg_packets.iter().enumerate() {
+    for (_, datamsg) in msg_packets.iter().enumerate() {
         // println!("[Client-{}] 发送第 {} 数据包 ", msg_id, index);
         protocol_utils::send_data_message(&mut stream, datamsg)?;
     

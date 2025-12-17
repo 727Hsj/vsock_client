@@ -43,5 +43,9 @@ pub fn dump_process() -> Result<Vec<u8>> {
     // 获取锁，保护通信过程
     let _guard = VSOCK_MUTEX.lock().map_err(|e| anyhow::anyhow!("获取锁失败: {:?}", e))?;
 
-    client_thread_dump::client_thread(DEFAULT_SERVER_CID, DEFAULT_SERVER_PORT, constants::DUMP_PROCESS_COMMAND)
+    let ret = client_thread_dump::client_thread(DEFAULT_SERVER_CID, DEFAULT_SERVER_PORT, constants::DUMP_PROCESS_COMMAND).unwrap_or_else(|e| {
+        Vec::new()
+    });
+    Ok(ret)
+
 }

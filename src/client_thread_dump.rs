@@ -159,6 +159,9 @@ fn get_one_report(stream: &mut VsockStream, client_id: usize) -> Result<(Vec<Mes
         // 5. 验证校验和
         let calculated_checksum = protocol_utils::calculate_checksum(&packet.body);
         if calculated_checksum != packet.header.checksum {
+
+            utils::graceful_shutdown(stream, "[Client-{}]");
+
             return Err(anyhow::anyhow!("Checksum mismatch for chunk {}", packet.header.chunk_index));
         }
 
