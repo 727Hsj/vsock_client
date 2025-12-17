@@ -32,9 +32,10 @@ impl MessagePacket {
         // 计算校验和
         self.header.checksum = utils::calculate_checksum(&self.body);
 
-        if start == MAX_MESSAGE_BODY_SIZE + MAX_MESSAGE_BODY_SIZE {
-            self.header.checksum = 0;   
-        }
+        // 测试用例，可以删除
+        // if start == MAX_MESSAGE_BODY_SIZE + MAX_MESSAGE_BODY_SIZE {
+        //     self.header.checksum = 0;   
+        // }
     }
 
 
