@@ -10,4 +10,6 @@ pub const SAVE_COMMAND: u8 = 0x01;
 pub const DUMP_COMMAND: u8 = 0x02;
 pub const SAVE_PROCESS_COMMAND: u8 = 0x03;
 pub const DUMP_PROCESS_COMMAND: u8 = 0x04;
+pub const SAVE_CRASH_LOG: u8 = 0x05;
+pub const DUMP_CRASH_LOG: u8 = 0x06;
 

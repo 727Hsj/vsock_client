@@ -31,7 +31,9 @@ pub fn client_thread(msg_packets: Vec<MessagePacket>, server_cid: u32, server_po
     if !protocol_utils::wait_for_ack(&mut stream, msg_id as u32) {
         return Err(anyhow::anyhow!("Server not ready"));
     }
+    println!("[Client-{}] 开始发送数据包...", msg_id);
 
+    let start = std::time::Instant::now();
     // 3. 分片发送数据
     for (_, datamsg) in msg_packets.iter().enumerate() {
         // println!("[Client-{}] 发送第 {} 数据包 ", msg_id, index);
@@ -42,6 +44,14 @@ pub fn client_thread(msg_packets: Vec<MessagePacket>, server_cid: u32, server_po
             return Err(anyhow::anyhow!("Transmission interrupted"));
         }
     }
+
+    let elapsed = start.elapsed();
+    let speed = ((msg_packets.len() * 20 + 1 * 1024 * 1024) as f64 / 1024.0) / elapsed.as_secs_f64();
+    println!("=== Send Complete ===");
+    println!("Total received: {} KB", ((msg_packets.len() * 20 + 1 * 1024 * 1024)) / 1024);
+    println!("Time: {:.2} seconds", elapsed.as_secs_f64());
+    println!("Speed: {:.2} KB/s", speed);
+
 
     // 4. 发送结束消息
     protocol_utils::send_end_message(&mut stream, msg_id as u32)?;
